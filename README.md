@@ -11,5 +11,5 @@ From Clone Series presents: WORDLE CLONE mobile
 
 ## How its going
 <p align="left">
-    <img src="https://i.imgur.com/DDo9KDF.jpg" alt="wordle_mobile" height= "90px" />
+    <img src="https://i.imgur.com/DDo9KDF.jpg" alt="wordle_mobile" height= "300px" />
 </p>
