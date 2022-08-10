@@ -6,7 +6,9 @@ import Keyboard from './src/components/Keyboard';
 
 const NUMBER_OF_TRIES = 6;
 
-
+const copyArray = (arr) => {
+  return [...arr.map((rows) => [...rows])]
+}
 
 export default function App() {
   const word = "hello";
@@ -20,8 +22,10 @@ export default function App() {
   const [curCol, setCurCol] = useState(0);
 
   const onKeyPressed = (key) => {
-    rows[curRow][curCol] = key;
-    setRows(rows);
+    const updatedRows = copyArray(rows)
+    updatedRows[curRow][curCol] = key;
+    setRows(updatedRows);
+    setCurCol(curCol + 1);
     }
   return (
     <SafeAreaView style={styles.container}>
