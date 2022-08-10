@@ -1,6 +1,6 @@
 import { View, Text, Pressable } from "react-native";
-import { keys, ENTER, CLEAR, colors } from "../../constants";
-import styles, { keyWidth } from "./Keyboard.styles";
+import { keys, ENTER, CLEAR, colors } from "../constants";
+import styles, { keyWidth } from "./Keyboard.style";
 
 const Keyboard = ({
   onKeyPressed = () => {},

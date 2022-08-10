@@ -1,5 +1,5 @@
 import { StyleSheet, Dimensions } from "react-native";
-import { keys, colors } from "../../constants";
+import { keys, colors } from "../constants";
 
 const screenWidth = Dimensions.get("window").width;
 export const keyWidth = (screenWidth - 10) / keys[0].length;
