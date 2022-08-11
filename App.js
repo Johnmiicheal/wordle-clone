@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, SafeAreaView, View, ScrollView } from 'react-native';
-import { colors, CLEAR } from './src/constants';
+import { StyleSheet, Text, SafeAreaView, View, ScrollView, Alert } from 'react-native';
+import { colors, CLEAR, ENTER, colorsToEmoji } from './src/constants';
 import Keyboard from './src/components/Keyboard';
+import * as Clipboard from 'expo-clipboard';
 
 const NUMBER_OF_TRIES = 6;
 
@@ -20,8 +21,39 @@ export default function App() {
     ))
   const [curRow, setCurRow] = useState(0);
   const [curCol, setCurCol] = useState(0);
+  const [gameState, setGameState] = useState("playing"); // won, lost, playing
+
+  useEffect(() => {
+    if (curRow > 0){
+      checkGameState();
+    }
+  }, [curRow]);
+
+  const checkGameState = () => {
+    if (checkIfWon() && gameState !== "won"){
+      Alert.alert("Hurray", "You won!", [
+        {text: "Share", onPress: shareScore },
+      ]);
+      setGameState("won");
+    } else if(checkIfLost() && gameState !== "lost"){
+      Alert.alert("Oops", "Try again tomorrow");
+      setGameState("lost");
+    }
+  };
+
+  const shareScore = () => {
+    const textMap = rows.map((row, i) => 
+        row.map((cell, j) => colorsToEmoji[getCellBGColor(i, j)]).join("")).filter((row) => row).join("\n");
+        const textToShare = `Wordle Clone \n${textMap}`;
+        Clipboard.setStringAsync(textToShare);
+        Alert.alert("Copied Successfully", "Share your score on zcamp");
+  };
 
   const onKeyPressed = (key) => {
+    if (gameState !== "playing"){
+      return;
+    }
+
     const updatedRows = copyArray(rows);
 
     if(key === CLEAR){
@@ -33,6 +65,15 @@ export default function App() {
       }
       return;
     }
+
+    if(key === ENTER){
+      if(curCol === rows[0].length){
+        setCurRow(curRow + 1);
+        setCurCol(0);
+      }
+      return;
+    }
+
     if (curCol < rows[0].length){
       updatedRows[curRow][curCol] = key;
       setRows(updatedRows);
@@ -44,23 +85,58 @@ export default function App() {
     return row === curRow && col === curCol;
   }
 
+  const getCellBGColor = (row, col) => {
+    const letter = rows[row][col];
+    if (row >= curRow){
+      return colors.black;
+    }
+    if(letter === letters[col]){
+      return colors.primary;
+    }
+    if (letters.includes(letter)){
+      return colors.secondary;
+    }
+    return colors.darkgrey;
+  };
+
+  const getAllLettersWithColor = (color) => {
+    return rows.flatMap((row, i) => 
+    row.filter((cell, j) => getCellBGColor(i, j) === color)
+     );
+  };
+
+  const greenCaps = getAllLettersWithColor(colors.primary);
+  const yellowCaps = getAllLettersWithColor(colors.secondary);
+  const greyCaps = getAllLettersWithColor(colors.darkgrey);
+
+  const checkIfWon = () => {
+    const row = rows[curRow - 1];
+    return row.every((letter, i) => letter === letters[i]);
+  };
+
+  const checkIfLost = () => {
+    return !checkIfWon() && curRow === rows.length;
+  }
+
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
       <Text style={styles.title}>WORDLE</Text>
 
       <ScrollView style={styles.map}>
-        {rows.map(( row, k ) => (
-        <View key={k} style={styles.row}>
-          {row.map((cell, i) => (
-            <View key={i} style={[styles.cell, {
-              borderColor: isCellActive(k, i)
+        {rows.map(( row, i ) => (
+        <View key={i} style={styles.row}>
+          {row.map((letter, j) => (
+            <View key={j} style={[styles.cell, {
+              borderColor: isCellActive(i, j)
               ? colors.lightgrey
               : colors.darkgrey,
+              backgroundColor: getCellBGColor(i, j)
             },
             ]}>
               <Text style={styles.cellText}>
-                {cell.toUpperCase()}
+                {letter.toUpperCase()}
               </Text>
             </View>
           ))}          
@@ -68,7 +144,11 @@ export default function App() {
         ))}
       </ScrollView>
 
-      <Keyboard onKeyPressed={onKeyPressed}/>
+      <Keyboard 
+        onKeyPressed={onKeyPressed}
+        greenCaps={greenCaps}
+        yellowCaps={yellowCaps}
+        greyCaps={greyCaps} />
     </SafeAreaView>
   );
 }
@@ -89,12 +169,12 @@ const styles = StyleSheet.create({
   map: {
     marginVertical: 60,
     alignSelf: "stretch",
-    height: 100,
   },
 
   row: {
     alignSelf: "stretch",
     flexDirection: "row",
+    justifyContent: "center",
   },
 
   cell: {
@@ -105,6 +185,7 @@ const styles = StyleSheet.create({
     margin: 3,
     justifyContent: "center",
     alignItems: "center",
+    maxWidth: 70,
     },
 
   cellText: {
