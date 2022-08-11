@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, SafeAreaView, View, ScrollView } from 'react-native';
-import { colors } from './src/constants';
+import { colors, CLEAR } from './src/constants';
 import Keyboard from './src/components/Keyboard';
 
 const NUMBER_OF_TRIES = 6;
@@ -22,11 +22,28 @@ export default function App() {
   const [curCol, setCurCol] = useState(0);
 
   const onKeyPressed = (key) => {
-    const updatedRows = copyArray(rows)
-    updatedRows[curRow][curCol] = key;
-    setRows(updatedRows);
-    setCurCol(curCol + 1);
+    const updatedRows = copyArray(rows);
+
+    if(key === CLEAR){
+      const prevCol = curCol - 1;
+      if (prevCol >= 0){
+        updatedRows[curRow][prevCol] = "";
+        setRows(updatedRows);
+        setCurCol(prevCol);
+      }
+      return;
     }
+    if (curCol < rows[0].length){
+      updatedRows[curRow][curCol] = key;
+      setRows(updatedRows);
+      setCurCol(curCol + 1);
+    }
+  }
+
+  const isCellActive = (row, col) => {
+    return row === curRow && col === curCol;
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
@@ -36,7 +53,12 @@ export default function App() {
         {rows.map(( row, k ) => (
         <View key={k} style={styles.row}>
           {row.map((cell, i) => (
-            <View key={i} style={styles.cell}>
+            <View key={i} style={[styles.cell, {
+              borderColor: isCellActive(k, i)
+              ? colors.lightgrey
+              : colors.darkgrey,
+            },
+            ]}>
               <Text style={styles.cellText}>
                 {cell.toUpperCase()}
               </Text>
